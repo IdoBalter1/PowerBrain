@@ -13,6 +13,10 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: str
 
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
     @field_validator("ALLOWED_ORIGINS") # transfomr the format of the data and validate the data check it is in an acceptable ormat.
     def parse_allwoed_origins(cls,v:str) -> List[str]:
         return v.split(',') if v else []
