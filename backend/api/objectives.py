@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
-from backend.models.learning import LearningObjective, LearningBlock
-from backend.core.models import objectives_db, blocks_db
+from models.learning import LearningObjective, LearningBlock
+from core.models import objectives_db, blocks_db
 from api.auth import get_current_user
 import uuid
 from datetime import datetime
