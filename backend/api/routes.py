@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from backend.models.user import User
+from models.user import User
 from api.auth import create_access_token, get_current_user, decode_JWT
 from pydantic import BaseModel
-from backend.core.models import users_db
+from core.models import users_db
 
 
 user_router = APIRouter(prefix = "/auth", tags=["auth"]) # continaer/grouping mechanism that groups realted endpoing together like a sub-app that gets merged into main app

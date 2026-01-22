@@ -3,25 +3,35 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm  # pyright: ignore[reportMissingImports]
 from fastapi.middleware.cors import CORSMiddleware  # pyright: ignore[reportMissingImports]
 from api.auth import get_current_user, create_access_token
-from database.models import users_db
+from core.models import users_db
 from typing import List
+from core.config import settings
+from api.routes import user_router
+from api.objectives import objectives_router
 
 
 
+app = FastAPI(
+    title="Up your learning",
+    desdcription="this is where you organise your learning",
+    version="0.1.0",
+    docs_url = "/docs",
+    redoc__url="/redoc"
 
-app = FastAPI()
+) 
 
 
 origins = [
-    "http://localhost:3000" # base origin of anything that we want to call anything on our server
+    "http://localhost:3000","http://localhost:5371" # base origin of anything that we want to call anything on our server
 ]
 
+# allow certain origins to interact with our backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = origins,
-    allow_creditinals = True, 
-    allow_methods=["*"], 
-    allow_headers=["*"]
+    allow_origins = settings.ALLOWED_ORIGINS,
+    allow_credentials = True, 
+    allow_methods=["*"], #GET (retrieve data) POST ( making data ) PUT (updating data)
+    allow_headers=["*"], # additional information you send with requests
 )
 
 memory_db = {}
@@ -38,3 +48,9 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @app.get("/protected")
 async def protected_route(username: str = Depends(get_current_user)):
     return {"message": f"Hello, {username}! This is a protected resource."}
+
+app.include_router(user_router)
+app.include_router(objectives_router) 
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

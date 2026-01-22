@@ -1,12 +1,9 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from database.schemas import User
-from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 import os
-
-from backend.core.config import settings
+from core.config import settings
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
@@ -16,7 +13,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(datetime.timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+   
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -39,6 +37,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 def decode_JWT(token : str) ->dict:
     try:
         decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return decoded_token if decoded_token["expires"] >= datetime.now(datetime.timezone.utc) else None
+        return decoded_token if decoded_token["expires"] >= datetime.now(timezone.utc) else None
     except:
         return {}
