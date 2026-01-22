@@ -6,8 +6,6 @@ from database.schemas import User
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
 from backend.core.config import settings
 
 SECRET_KEY = settings.SECRET_KEY
@@ -18,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(datetime.timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -37,3 +35,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         return username
     except JWTError:
         raise credentials_exception
+
+def decode_JWT(token : str) ->dict:
+    try:
+        decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return decoded_token if decoded_token["expires"] >= datetime.now(datetime.timezone.utc) else None
+    except:
+        return {}
