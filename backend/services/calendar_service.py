@@ -6,31 +6,37 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
+from pathlib import Path
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
-
+SERVICE_DIR = Path(__file__).parent
 def get_calendar_service():
-  creds = None
-  if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-  # If there are no (valid) credentials available, let the user log in.
-  if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-      creds.refresh(Request())
-    else:
-      flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
-      )
-      print(f"Redirect URI: {flow.redirect_uri}")
-      creds = flow.run_local_server(port=0)
-      #creds = flow.run_console()
-    # Save the credentials for the next run
-    with open("token.json", "w") as token:
-      token.write(creds.to_json())
-
-  return build("calendar", "v3", credentials=creds)
+    creds = None
+    token_path = SERVICE_DIR / "token.json"
+    credentials_path = SERVICE_DIR / "credentials.json"
+    
+    if token_path.exists():
+        creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+    
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            if not credentials_path.exists():
+                raise FileNotFoundError(
+                    f"credentials.json not found at {credentials_path}. "
+                    "Please download it from Google Cloud Console."
+                )
+            flow = InstalledAppFlow.from_client_secrets_file(
+                str(credentials_path), SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+        
+        with open(token_path, "w") as token:
+            token.write(creds.to_json())
+    
+    return build("calendar", "v3", credentials=creds)
 
 
 def get_events(maxdays):
@@ -57,7 +63,7 @@ def get_events(maxdays):
 
     if not events:
       print("No upcoming events found.")
-      return
+      return []
 
     # Prints the start and name of the next 10 events
     for event in events:
