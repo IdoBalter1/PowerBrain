@@ -11,14 +11,8 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
-def main():
-  """Shows basic usage of the Google Calendar API.
-  Prints the start and name of the next 10 events on the user's calendar.
-  """
+def get_calendar_service():
   creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
-  # created automatically when the authorization flow completes for the first
-  # time.
   if os.path.exists("token.json"):
     creds = Credentials.from_authorized_user_file("token.json", SCOPES)
   # If there are no (valid) credentials available, let the user log in.
@@ -29,23 +23,30 @@ def main():
       flow = InstalledAppFlow.from_client_secrets_file(
           "credentials.json", SCOPES
       )
+      print(f"Redirect URI: {flow.redirect_uri}")
       creds = flow.run_local_server(port=0)
       #creds = flow.run_console()
     # Save the credentials for the next run
     with open("token.json", "w") as token:
       token.write(creds.to_json())
 
-  try:
-    service = build("calendar", "v3", credentials=creds)
+  return build("calendar", "v3", credentials=creds)
 
-    # Call the Calendar API
-    now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+
+def get_events(maxdays):
+  try:
+    service = get_calendar_service()
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    max_days_later = now + datetime.timedelta(days = maxdays)
+    time_min = now.isoformat()
+    time_max = max_days_later.isoformat()
     print("Getting the upcoming 10 events")
     events_result = (
         service.events()
         .list(
             calendarId="primary",
-            timeMin=now,
+            timeMin=time_min,
+            timeMax = time_max,
             maxResults=1000,
             singleEvents=True,
             orderBy="startTime",
@@ -62,20 +63,25 @@ def main():
     for event in events:
       start = event["start"].get("dateTime", event["start"].get("date"))
       print(start, event["summary"])
+    return events
 
   except HttpError as error:
     print(f"An error occurred: {error}")
+    return []
+  
 
-def create_event(service, summary, start_time, end_time, description=None, location=None):
+def create_event(summary, start_time, end_time, description=None, location=None):
+    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    service = build("calendar", "v3", credentials=creds)
     event = {
         "summary": summary,
         "start": {
             "dateTime": start_time,
-            "timeZone": "GMT",  
+            "timeZone": "Europe/London",  
         },
         "end": {
             "dateTime": end_time,
-            "timeZone": "GMT",   
+            "timeZone": "Europe/London",   
         }
     }
     if description:
@@ -90,7 +96,13 @@ def create_event(service, summary, start_time, end_time, description=None, locat
     except Exception as e:
         print(f"An error occurred creating the event: {e}")
         return None
-    
+      
+
+
 
 if __name__ == "__main__":
-  main()
+  user_message = 'I want to learn HTML in 10 days for my interview'
+  maxdays = 30
+  print(create_prompt(user_message, maxdays))
+  # Example usage: create an event
+  
