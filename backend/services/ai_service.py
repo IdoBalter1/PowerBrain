@@ -1,10 +1,9 @@
-
 import os
 from dotenv import load_dotenv
 from pathlib import Path
 from openai import OpenAI
-from ai_prompt import initial_prompt
-from calendar_service import get_events,create_event, get_calendar_service
+from services.ai_prompt import initial_prompt
+from services.calendar_service import get_events, create_event, get_calendar_service
 # Load .env from parent directory
 load_dotenv(Path(__file__).parent.parent / ".env")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -81,9 +80,9 @@ Please create a schedule of learning blocks that works around the user's existin
     
     return prompt
 
-def create_objective_from_request(request,username):
+def create_objective_from_request(initial_prompt,request,username,max_days = 30):
 
-    prompt = create_prompt(request)
+    prompt = create_prompt(request,max_days)
     initial_prompt.append({"role" : "user", "content":prompt})
     response = client.chat.completions.create(
         model="gpt-4o-mini",

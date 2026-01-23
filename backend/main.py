@@ -8,6 +8,8 @@ from typing import List
 from core.config import settings
 from api.routes import user_router
 from api.objectives import objectives_router
+from api.calendar import calendar_router
+from api.ai import ai_router
 
 
 
@@ -51,6 +53,8 @@ async def protected_route(username: str = Depends(get_current_user)):
 
 app.include_router(user_router)
 app.include_router(objectives_router) 
+app.include_router(calendar_router)
+app.include_router(ai_router)
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
