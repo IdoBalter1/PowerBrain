@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import api from './services/api.js'
+import React from 'react'
+import { BrowserRouter } from 'react-router-dom'
 import LoginSignup from './components/loginSignUp/LoginSignUp.jsx'
 
 const App = () => {
     return (
-        <div>
-            <LoginSignup/>
-        </div>
+        <BrowserRouter>
+            <div>
+                <LoginSignup />
+            </div>
+        </BrowserRouter>
     )
 }
 
