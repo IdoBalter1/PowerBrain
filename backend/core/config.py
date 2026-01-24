@@ -7,19 +7,23 @@ class Settings(BaseSettings):
     API_PREFIX : str= "/api"
     DEBUG: bool=False
 
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite:///./powerbrain.db"  # Default to SQLite for development
 
     ALLOWED_ORIGINS: str=""
 
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: str = ""  # Optional for now
 
-    SECRET_KEY: str
+    SECRET_KEY: str = "dev-secret-key-change-in-production"  # Default for development
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     @field_validator("ALLOWED_ORIGINS") # transfomr the format of the data and validate the data check it is in an acceptable ormat.
     def parse_allwoed_origins(cls,v:str) -> List[str]:
-        return v.split(',') if v else []
+        if not v:
+            return []
+        # Split by comma and strip whitespace, also replace https://localhost with http://localhost for development
+        origins = [origin.strip().replace('https://localhost', 'http://localhost') for origin in v.split(',')]
+        return origins
     
     class Config: # instructions for pydantic, read form this file use this ecnoding and be case sensitife. Tells pydantic how to read the .env file
         env_file= ".env"
