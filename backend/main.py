@@ -10,8 +10,10 @@ from api.routes import user_router
 from api.objectives import objectives_router
 from api.calendar import calendar_router
 from api.ai import ai_router
+from db.database import engine, Base
 
-
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Up your learning",
@@ -23,9 +25,9 @@ app = FastAPI(
 ) 
 
 
-origins = [
-    "http://localhost:3000","http://localhost:5371" # base origin of anything that we want to call anything on our server
-]
+
+
+
 
 # allow certain origins to interact with our backend
 app.add_middleware(
