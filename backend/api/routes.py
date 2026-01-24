@@ -14,29 +14,53 @@ class LoginRequest(BaseModel):
 
 @user_router.post("/register")
 async def register(user: User, db: Session = Depends(get_db)):
+    try:
+        existing_user = db.query(User_db).filter(User_db.username == user.username).first()
 
-    db_user = db.query(User_db).filter(User_db.username == user.username).first()
+        if existing_user:
+            if existing_user.username == user.username:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Username already exists"
+                )
+            else:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Email already exists"
+                )
 
-    if db_user:
-        if db_user.username == user.username:
-            raise HTTPException(
-                status_code = 409,
-                detail="Username already exists"
-            )
-        else:
-            raise HTTPException(
-                status_code=409,
-                detail="Email already exists"
-            )
+        # Create user in database
+        db_user = create_user(db, user)
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user.username})
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "message": "User registered successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Handle database integrity errors (race conditions)
+        if "UNIQUE constraint" in str(e) or "IntegrityError" in str(type(e).__name__):
+            if "email" in str(e).lower():
+                raise HTTPException(
+                    status_code=409,
+                    detail="Email already exists"
+                )
+            elif "username" in str(e).lower():
+                raise HTTPException(
+                    status_code=409,
+                    detail="Username already exists"
+                )
+        print(f"Error in register: {e}") 
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
 
-    access_token = create_access_token(data={"sub": user.username})
-
-    create_user(db,user)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "message": "User registered successfully"
-    }
 
 @user_router.post("/login")
 async def login(user: LoginRequest, db: Session = Depends(get_db)):
